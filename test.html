@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Test</title>
+</head>
+<body>
+    <h1>Testing Firebase Connection...</h1>
+    <p id="status" style="font-size: 20px; font-weight: bold;">Waiting for data...</p>
+
+    <!-- Load Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // Your exact Firebase keys
+        const firebaseConfig = {
+            apiKey: "AIzaSyCa8G_6TGyPguUfTlkAB-FOB7Wlx2OaxLc",
+            authDomain: "bini-1880e.firebaseapp.com",
+            databaseURL: "https://bini-1880e-default-rtdb.firebaseio.com",
+            projectId: "bini-1880e",
+            storageBucket: "bini-1880e.firebasestorage.app",
+            messagingSenderId: "899310464773",
+            appId: "1:899310464773:web:a25d304cff7416a7ca116c"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Fetch data
+        db.ref('/').once('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const items = Array.isArray(data) ? data : Object.values(data);
+                
+                // Filter out the blank rows and the 46184 junk rows
+                const validItems = items.filter(i => i.Buyer && i.Buyer.trim() !== '' && i.OS !== 46184 && i.OS !== -46184);
+                
+                document.getElementById('status').innerText = "✅ SUCCESS! Found " + validItems.length + " valid items in Firebase!";
+                document.getElementById('status').style.color = "green";
+                console.log("Here is your data:", validItems);
+            } else {
+                document.getElementById('status').innerText = "❌ Database is empty.";
+                document.getElementById('status').style.color = "red";
+            }
+        }, (error) => {
+            document.getElementById('status').innerText = "❌ ERROR: " + error.message;
+            document.getElementById('status').style.color = "red";
+        });
+    </script>
+</body>
+</html>
