@@ -6840,94 +6840,69 @@ function init(){
   rDash();
 }
   init();
-  <!-- UNIVERSAL FIREBASE INTEGRATION -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-<script>
-  // 1. Your Exact Config
-  const firebaseConfig = {
-    apiKey: "AIzaSyCa8G_6TGyPguUfTlkAB-FOB7Wlx2OaxLc",
-    authDomain: "bini-1880e.firebaseapp.com",
-    databaseURL: "https://bini-1880e-default-rtdb.firebaseio.com",
-    projectId: "bini-1880e",
-    storageBucket: "bini-1880e.firebasestorage.app",
-    messagingSenderId: "899310464773",
-    appId: "1:899310464773:web:a25d304cff7416a7ca116c"
-  };
-
-  // 2. Initialize (Prevents "already initialized" errors)
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-  const db = firebase.database();
-
-  // 3. Fetch and Display
-  // We use window.onload to ensure the page is fully ready before we run this
-  window.onload = function() {
-      db.ref('/').once('value', (snapshot) => {
-          const data = snapshot.val();
-          if (!data) return;
-
-          const items = Array.isArray(data) ? data : Object.values(data);
-          
-          // Filter out the junk rows (Empty buyers or OS=46184)
-          const validItems = items.filter(i => 
-              i.Buyer && 
-              i.Buyer.trim() !== '' && 
-              i.OS !== 46184 && 
-              i.OS !== -46184
-          );
-
-          // Create a container div
-          let container = document.createElement('div');
-          container.style.cssText = "margin: 40px auto; max-width: 95%; font-family: sans-serif; background: #fff; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; border: 2px solid #007bff;";
-          
-          let html = <h2 style="color: #007bff; border-bottom: 2px solid #eee; padding-bottom: 10px;">📊 Live Inventory Data (from Firebase)</h2>;
-          html += <p style="color: green; font-weight: bold;">✅ Successfully loaded ${validItems.length} valid records.</p>;
-          
-          html += <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-            <thead>
-              <tr style="background: #f1f1f1; text-align: left;">
-                <th style="padding: 12px; border-bottom: 2px solid #ddd;">Buyer</th>
-                <th style="padding: 12px; border-bottom: 2px solid #ddd;">Amount</th>
-                <th style="padding: 12px; border-bottom: 2px solid #ddd;">Date</th>
-                <th style="padding: 12px; border-bottom: 2px solid #ddd;">Status</th>
-                <th style="padding: 12px; border-bottom: 2px solid #ddd;">Remark</th>
-              </tr>
-            </thead><tbody>;
-
-          validItems.forEach(item => {
-              // Clean up the Remark array
-              let remark = "";
-              if (Array.isArray(item.Remark)) {
-                  remark = item.Remark.find(r => r && r.trim() !== "") || "";
-              } else {
-                  remark = item.Remark || "";
-              }
-
-              // Color code status
-              let color = "black";
-              if (item.Status && item.Status.toLowerCase().includes("credit")) color = "darkorange";
-              if (item.Status && item.Status.toLowerCase().includes("parcial")) color = "purple";
-
-              html += <tr>
-                <td style="padding: 12px; border-bottom: 1px solid #eee;"><b>${item.Buyer}</b></td>
-                <td style="padding: 12px; border-bottom: 1px solid #eee;">${item.Amount || '-'}</td>
-                <td style="padding: 12px; border-bottom: 1px solid #eee;">${item.Date || '-'}</td>
-                <td style="padding: 12px; border-bottom: 1px solid #eee; color: ${color}; font-weight: bold;">${item.Status || '-'}</td>
-                <td style="padding: 12px; border-bottom: 1px solid #eee;">${remark}</td>
-              </tr>;
-          });
-
-          html += </tbody></table>;
-          container.innerHTML = html;
-
-          // Append to the very bottom of the page
-          document.body.appendChild(container);
-      });
-  };
-</script>
+// Wait for page to fully load
+window.addEventListener('DOMContentLoaded', function() {
+    // Load Firebase scripts dynamically
+    const firebaseAppScript = document.createElement('script');
+    firebaseAppScript.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js';
+    document.body.appendChild(firebaseAppScript);
+    
+    const firebaseDbScript = document.createElement('script');
+    firebaseDbScript.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js';
+    document.body.appendChild(firebaseDbScript);
+    
+    // Initialize after scripts load
+    firebaseDbScript.onload = function() {
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyCa8G_6TGyPguUfTlkAB-FOB7Wlx2OaxLc",
+                authDomain: "bini-1880e.firebaseapp.com",
+                databaseURL: "https://bini-1880e-default-rtdb.firebaseio.com",
+                projectId: "bini-1880e",
+                storageBucket: "bini-1880e.firebasestorage.app",
+                messagingSenderId: "899310464773",
+                appId: "1:899310464773:web:a25d304cff7416a7ca116c"
+            };
+            
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            
+            const db = firebase.database();
+            
+            // Load data without blocking UI
+            db.ref('/').once('value', function(snapshot) {
+                const data = snapshot.val();
+                if (data) {
+                    const items = Array.isArray(data) ? data : Object.values(data);
+                    const validItems = items.filter(function(item) {
+                        return item.Buyer && item.Buyer.trim() !== '' && item.OS !== 46184;
+                    });
+                    
+                    console.log('✅ Loaded', validItems.length, 'valid items from Firebase');
+                    
+                    // Store in localStorage for your existing code
+                    localStorage.setItem('inventoryData', JSON.stringify(validItems));
+                    
+                    // Show a simple notification (non-blocking)
+                    const notification = document.createElement('div');
+                    notification.style.cssText = 'position:fixed;top:10px;right:10px;background:#4CAF50;color:white;padding:15px;border-radius:5px;z-index:9999;';
+                    notification.textContent = '✅ Data loaded: ' + validItems.length + ' items';
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(function() {
+                        notification.remove();
+                    }, 3000);
+                }
+            }, function(error) {
+                console.error('❌ Firebase error:', error);
+            });
+            
+        } catch (e) {
+            console.error('Initialization error:', e);
+        }
+    };
+});
 </script>
 </body>
 </html>
