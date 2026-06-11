@@ -6840,6 +6840,94 @@ function init(){
   rDash();
 }
 init();
+  <!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+  // 1. Your Firebase Config (with your actual keys)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCa8G_6TGyPguUfTlkAB-FOB7Wlx2OaxLc",
+    authDomain: "bini-1880e.firebaseapp.com",
+    databaseURL: "https://bini-1880e-default-rtdb.firebaseio.com",
+    projectId: "bini-1880e",
+    storageBucket: "bini-1880e.firebasestorage.app",
+    messagingSenderId: "899310464773",
+    appId: "1:899310464773:web:a25d304cff7416a7ca116c"
+  };
+
+  // 2. Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // 3. Load and Display Data
+  db.ref('/').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    // Convert to array
+    const items = Array.isArray(data) ? data : Object.values(data);
+    
+    // Build the table HTML
+    let html = 
+      <div style="margin: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; font-family: Arial;">
+        <h2 style="color: green;">✅ Firebase Connected!</h2>
+        <p>Total Records: <b>${items.length}</b> | Valid Buyers: <b>${items.filter(i => i.Buyer && i.Buyer.trim() !== '' && i.OS !== 46184 && i.OS !== -46184).length}</b></p>
+        <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 0 5px rgba(0,0,0,0.1);">
+          <thead>
+            <tr style="background: #007bff; color: white;">
+              <th style="padding: 10px; border: 1px solid #ddd;">Buyer</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">Amount</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">Date</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">Status</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">Remark</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">OS (Days)</th>
+            </tr>
+          </thead>
+          <tbody>
+    ;
+
+    let validCount = 0;
+
+    items.forEach(item => {
+      // STRICT FILTER: Skip blank rows AND the 46184 junk rows
+      if (!item.Buyer  item.Buyer.trim() === ''  item.OS === 46184  item.OS === -46184  item.OS === "46184" || item.OS === "-46184") {
+        return; 
+      }
+
+      validCount++;
+
+      // Clean up the Remark (it's saved as an array like ["Settled", ""])
+      let remark = "";
+      if (Array.isArray(item.Remark)) {
+        remark = item.Remark.find(r => r && r.trim() !== "") || "";
+      } else {
+        remark = item.Remark || "";
+      }
+
+      // Color code the status
+      let statusColor = "black";
+      if (item.Status && item.Status.toLowerCase().includes("credit")) statusColor = "orange";
+      if (item.Status && item.Status.toLowerCase().includes("parcial")) statusColor = "purple";
+
+      html += 
+        <tr>
+          <td style="padding: 10px; border: 1px solid #ddd;"><b>${item.Buyer}</b></td>
+          <td style="padding: 10px; border: 1px solid #ddd;">${item.Amount || '-'}</td>
+          <td style="padding: 10px; border: 1px solid #ddd;">${item.Date || '-'}</td>
+          <td style="padding: 10px; border: 1px solid #ddd; color: ${statusColor}; font-weight: bold;">${item.Status || '-'}</td>
+          <td style="padding: 10px; border: 1px solid #ddd;">${remark}</td>
+          <td style="padding: 10px; border: 1px solid #ddd;">${item.OS !== null && item.OS !== undefined ? item.OS : '-'}</td>
+        </tr>
+      ;
+    });
+
+    html += </tbody></table></div>;
+
+    // Inject the table into the webpage
+    document.body.insertAdjacentHTML('beforeend', html);
+  });
+</script>
 </script>
 </body>
 </html>
